@@ -42,7 +42,11 @@
     checkOnLoad: false,
     interceptRequests: true,
     reconnect: true,
-    deDupBody: false
+    deDupBody: false,
+    onlyFromOrigins: {
+      enabled: false,
+      origins: [],
+    },
   };
 
   grab = function(obj, key) {
@@ -161,8 +165,22 @@
   };
 
   checkXHR = function(xhr, onUp, onDown) {
-    var _onerror, _onload, _onreadystatechange, _ontimeout, checkStatus;
+    var _onerror, _onload, _onreadystatechange, _ontimeout, checkStatus, checkURL, getOrigin;
+
+    checkURL = function() {
+      if(Offline.getOption("onlyFromOrigins.enabled") !== false) {
+        for(var i = 0, l = Offline.options.onlyFromOrigins.origins.length; i < l; i++) {
+          if(Offline.options.onlyFromOrigins.origins[i].test(xhr.responseURL)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      return true;
+    };
     checkStatus = function() {
+      if(!checkURL()) return false;
       if (xhr.status && xhr.status < 12000) {
         return onUp();
       } else {
@@ -170,6 +188,7 @@
       }
     };
     if (xhr.onprogress === null) {
+      if(!checkURL()) return false;
       _onerror = xhr.onerror;
       xhr.onerror = function() {
         onDown();

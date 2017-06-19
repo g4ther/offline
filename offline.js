@@ -30,7 +30,11 @@
     checkOnLoad:!1,
     interceptRequests:!0,
     reconnect:!0,
-    deDupBody:!1
+    deDupBody:!1,
+    onlyFromOrigins: {
+      enabled: false,
+      origins: [],
+    },
   }, grab = function(obj, key) {
     var cur, i, j, len, part, parts;
     for (cur = obj, parts = key.split("."), i = j = 0, len = parts.length; j < len && (part = parts[i], 
@@ -75,14 +79,30 @@
       return results;
     }
   }, checkXHR = function(xhr, onUp, onDown) {
-    var _onerror, _onload, _onreadystatechange, _ontimeout, checkStatus;
+    var _onerror, _onload, _onreadystatechange, _ontimeout, checkStatus, checkURL, getOrigin;
+    checkURL = function() {
+      if(Offline.getOption("onlyFromOrigins.enabled") !== false) {
+        for(var i = 0, l = Offline.options.onlyFromOrigins.origins.length; i < l; i++) {
+          if(Offline.options.onlyFromOrigins.origins[i].test(xhr.responseURL)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      return true;
+    };
     return checkStatus = function() {
+      if(!checkURL()) return false;
       return xhr.status && xhr.status < 12e3 ? onUp() :onDown();
     }, null === xhr.onprogress ? (_onerror = xhr.onerror, xhr.onerror = function() {
+      if(!checkURL()) return false;
       return onDown(), "function" == typeof _onerror ? _onerror.apply(null, arguments) :void 0;
     }, _ontimeout = xhr.ontimeout, xhr.ontimeout = function() {
+      if(!checkURL()) return false;
       return onDown(), "function" == typeof _ontimeout ? _ontimeout.apply(null, arguments) :void 0;
     }, _onload = xhr.onload, xhr.onload = function() {
+      if(!checkURL()) return false;
       return checkStatus(), "function" == typeof _onload ? _onload.apply(null, arguments) :void 0;
     }) :(_onreadystatechange = xhr.onreadystatechange, xhr.onreadystatechange = function() {
       return 4 === xhr.readyState ? checkStatus() :0 === xhr.readyState && onDown(), "function" == typeof _onreadystatechange ? _onreadystatechange.apply(null, arguments) :void 0;
