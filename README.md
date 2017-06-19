@@ -1,3 +1,16 @@
+This is a fork of https://github.com/HubSpot/offline which allows you to specify (using RegEx) allowed URLs to intercept.
+You can do this by adding the following options:
+```javascript
+onlyFromOrigins: {
+    enabled: true,
+    origins: [],
+}
+```
+
+Where origins is an array of RegEx URLs (these are treated as "OR" not "AND")
+
+The rest of the original README.md is as follows:
+
 ___
 
 **This project isn't actively maintained.**
